@@ -1,7 +1,7 @@
 # Rejeu d'algorithmes de pilotage d'un micro-réseau
 
 > **Travail personnel en cours.** Étude d'apprentissage sur le pilotage d'une
-> batterie couplée à du photovoltaïque, menée pas à pas. Les marches 1 à 4 sont
+> batterie couplée à du photovoltaïque, menée pas à pas. Les marches 1 à 5 sont
 > faites et validées ; la suite est décrite dans la [feuille de route](#feuille-de-route).
 
 ## Objectif
@@ -58,7 +58,7 @@ charge, pas de 5 min.
 | Sans batterie | ≈ 840 $ | 847 $ | `marche2_parametrage.py` |
 | Heuristique Stateflow | ≈ 735 $ | 741 $ | `marche4_regle.py` |
 | Optimisation à information parfaite (`linprog`, un seul appel) | sans objet (*) | 586 $ | `marche3_optimisation.py` |
-| Optimisation à horizon glissant (MPC, 20 h) | ≈ 640 $ | marche 5 | |
+| Optimisation à horizon glissant (MPC, 20 h) | ≈ 640 $ | 615 $ | `marche5_mpc.py` |
 
 Coûts en $, avec la même formule que Simulink : prix `costData + 5` en c$/kWh.
 L'écart Python/Simulink d'environ 1 % vient du pas de 5 min, face à une
@@ -94,7 +94,30 @@ Les autres captures : [`energyOptimizationScript.png`](results/simulink/energyOp
 [`compareCosts.png`](results/simulink/compareCosts.png) (coûts cumulés des
 trois stratégies).
 
-### Ce que les quatre marches ont appris
+### MPC contre optimisation sur la journée entière
+
+![Comparaison des coûts](results/marche5_compare_costs.png)
+
+La MPC (615 $) coûte un peu plus que l'optimisation résolue une seule fois sur
+la journée (586 $), pour deux raisons :
+
+- **Elle finit la journée avec plus d'énergie** : 667 kWh contre 500 kWh. Son
+  horizon de 20 h dépasse minuit, et elle « voit » un lendemain identique,
+  qu'elle prépare. L'optimisation sur la journée entière, elle, sait que tout
+  s'arrête à minuit et vide la batterie. Valorisés à environ 14 c$/kWh, ces
+  167 kWh représentent environ 23 $, soit la quasi-totalité de l'écart.
+- **Son horizon est plus court en début de journée** : à 0 h, elle ne voit que
+  jusqu'à 20 h.
+
+L'écart avec Simulink (≈ 640 $) s'accumule surtout entre 16 h et 18 h, pendant
+la recharge avant le pic : le modèle Simscape a des pertes, le modèle Python
+n'en a pas. Appliquer `Pbatt(1)` ou `Pbatt(2)` ne change presque rien
+(614 $ contre 615 $).
+
+Les deux restent des **bornes optimistes** : la prévision y est parfaite. Une
+vraie MPC travaillera avec des prévisions erronées (feuille de route).
+
+### Ce que les marches ont appris
 
 - **Mode d'appel du solveur.** Dans le modèle Simulink, `linprog` est appelé
   toutes les 5 min sur un horizon de 20 h, à partir du SOC mesuré : c'est une
@@ -140,6 +163,7 @@ Electrical et Stateflow.
 | `src/marche2_parametrage.py` | paramétrage du cas *MATLAB only* (pas de 5 min, bornes batterie) |
 | `src/marche3_optimisation.py` | portage de `battSolarOptimize` en `scipy.optimize.linprog` |
 | `src/marche4_regle.py` | machine à états `HeuristicEMS` et simulateur de rejeu |
+| `src/marche5_mpc.py` | MPC : optimisation relancée toutes les 5 min sur 20 h, comparaison des 4 stratégies |
 
 ## Lancer le code
 
@@ -151,6 +175,7 @@ python src/marche1_donnees.py
 python src/marche2_parametrage.py
 python src/marche3_optimisation.py
 python src/marche4_regle.py
+python src/marche5_mpc.py
 ```
 
 Chaque script affiche ses chiffres et enregistre sa figure dans `results/`.
@@ -161,8 +186,7 @@ Chaque script affiche ses chiffres et enregistre sa figure dans `results/`.
 - [x] Marche 2 : reproduire le paramétrage
 - [x] Marche 3 : porter l'optimisation linéaire
 - [x] Marche 4 : reproduire l'heuristique Stateflow
-- [ ] Marche 5 : comparer règle, optimisation à information parfaite et MPC sur
-      la journée de référence
+- [x] Marche 5 : MPC à horizon glissant de 20 h, comparée à Simulink
 - [ ] Données réelles d'une semaine à Nantes : PV avec
       [PVGIS](https://joint-research-centre.ec.europa.eu/photovoltaic-geographical-information-system-pvgis_en),
       consommation tertiaire [Enedis Open Data](https://opendata.enedis.fr),
