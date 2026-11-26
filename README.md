@@ -35,6 +35,18 @@ Pour chaque marche, on suit le même ordre :
 Le but est de disposer d'abord d'un double Python **fidèle** au modèle de
 référence, défauts compris, avant de l'améliorer.
 
+### Méthode de travail et transparence
+
+- **MATLAB/Simulink** : j'ai exécuté moi-même le modèle d'origine et relevé les
+  résultats. Les captures sont dans `results/simulink/`.
+- **Python** : le code a été écrit avec l'aide d'un assistant d'IA (Claude),
+  marche par marche, à partir de mon analyse du modèle MathWorks.
+- **Validation** : chaque script Python est confronté aux résultats
+  MATLAB/Simulink que j'ai obtenus, et les écarts sont consignés dans ce README.
+
+L'objectif de ce dépôt est d'apprendre à comprendre, porter et vérifier des
+algorithmes de pilotage. Ce n'est pas un logiciel de production.
+
 ## Résultats à ce stade
 
 Journée de référence MathWorks (`pvLoadPriceData.mat`) : PV de 760 kWc, charge
