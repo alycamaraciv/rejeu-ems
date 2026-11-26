@@ -56,6 +56,32 @@ simulation électrique continue dans Simulink.
 problème. Le portage Python retrouve sa trajectoire et son coût optimal :
 `dt·C'·Pgrid = 1,458171e11` en unités MATLAB.
 
+### Validation contre Simulink
+
+Les captures du modèle d'origine, exécuté sous MATLAB/Simulink, sont rangées
+dans [`results/simulink/`](results/simulink/). Pour l'heuristique, on compare
+l'oscilloscope *Microgrid Measures* à la même mise en page produite en Python :
+
+| Simulink, mode Chart | Python, `marche4_regle.py` |
+|---|---|
+| ![Oscilloscope Simulink](results/simulink/microgrid_measures_heuristique.png) | ![Python, même mise en page](results/marche4_style_simulink.png) |
+
+| Repère | Simulink | Python |
+|---|---|---|
+| SOC minimum du matin | ≈ 38 % vers 7 h 45 | 37,6 % vers 7 h 40 |
+| SOC à 80 % (fin de l'absorption PV) | ≈ 14 h 00 | 13 h 45 |
+| Fin de la décharge forcée | ≈ 19 h 45, SOC ≈ 19,5 % | 19 h 45, SOC 20 % |
+| SOC final après la recharge de nuit | ≈ 31 % | ≈ 35 % |
+
+Les petits écarts viennent du modèle de batterie. Simscape représente une
+batterie électrique (tension, pertes) ; Python utilise un intégrateur idéal,
+avec un rendement de 1.
+
+Les autres captures : [`energyOptimizationScript.png`](results/simulink/energyOptimizationScript.png)
+(cas *MATLAB only*, à comparer à `results/marche3_optimisation.png`) et
+[`compareCosts.png`](results/simulink/compareCosts.png) (coûts cumulés des
+trois stratégies).
+
 ### Ce que les quatre marches ont appris
 
 - **Mode d'appel du solveur.** Dans le modèle Simulink, `linprog` est appelé
@@ -83,11 +109,18 @@ problème. Le portage Python retrouve sa trajectoire et son coût optimal :
 data/reference/   données et licence du modèle MathWorks (petite taille, versionnées)
 docs/             analyse du modèle de référence
 src/              code Python, un script par marche
-results/          figures produites par les scripts
+results/          figures produites par les scripts Python
+results/simulink/ captures du modèle MathWorks exécuté sous MATLAB/Simulink
 ```
 
 Les données volumineuses téléchargées (`data/brut/`) ne sont pas versionnées :
 voir `.gitignore`.
+
+Le modèle Simulink `microgrid_WithESSOpt.slx` et les scripts MATLAB d'origine ne
+sont pas recopiés ici. On les récupère dans le
+[dépôt MathWorks](https://github.com/jonlesage/Microgrid-EMS-Optimization).
+Il faut MATLAB avec Optimization Toolbox, Simulink, Simscape, Simscape
+Electrical et Stateflow.
 
 | Script | Rôle |
 |---|---|

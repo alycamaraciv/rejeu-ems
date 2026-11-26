@@ -49,6 +49,7 @@ from marche1_donnees import RACINE
 from marche2_parametrage import J_PAR_KWH, CasOptimisation, cas_matlab_only
 
 FIGURE = RACINE / "results" / "marche4_regle.png"
+FIGURE_SIMULINK = RACINE / "results" / "marche4_style_simulink.png"
 
 MIN_SOC = 20.0   # [%], constante minSOC du graphe
 MAX_SOC = 80.0   # [%], constante maxSOC du graphe
@@ -249,6 +250,36 @@ def main() -> None:
     fig.tight_layout()
     fig.savefig(FIGURE, dpi=120)
     print(f"\nFigure enregistrée : {FIGURE.relative_to(RACINE)}")
+
+    figure_style_simulink(cas, sims["continu"])
+
+
+def figure_style_simulink(cas: CasOptimisation, sim: Simulation) -> None:
+    """Reprend la mise en page de l'oscilloscope « Microgrid Measures » pour comparer à l'œil.
+
+    Axe des temps en secondes, comme dans Simulink. SOC en %, prix en c$/kWh
+    décalé de +5, comme le prix réellement facturé par le modèle.
+    """
+    t_s = cas.tvec
+    capacite = cas.batterie.Emax / 0.8
+    fig, ax = plt.subplots(3, 1, figsize=(7, 9), sharex=True)
+    ax[0].plot(t_s, cas.Ppv / 1e3, color="gold", label="PV")
+    ax[0].plot(t_s, sim.Pbatt / 1e3, color="tab:blue", label="ESS")
+    ax[0].plot(t_s, sim.Pgrid / 1e3, color="tab:orange", label="Grid")
+    ax[0].plot(t_s, cas.Pload / 1e3, color="tab:green", label="Loads")
+    ax[0].set_title("Power (kW)")
+    ax[0].legend(fontsize=8)
+    ax[1].plot(t_s, 100 * sim.Ebatt / capacite, color="gold")
+    ax[1].set_title("ESS SOC (%)")
+    ax[2].plot(t_s, cas.Cost + 5, color="gold")
+    ax[2].set_title("Price (Cents/kW-h)")
+    ax[2].set_xlabel("Temps [s]")
+    for a in ax:
+        a.grid(alpha=0.3)
+    fig.suptitle("Python, heuristique : même mise en page que l'oscilloscope Simulink")
+    fig.tight_layout()
+    fig.savefig(FIGURE_SIMULINK, dpi=110)
+    print(f"Figure enregistrée : {FIGURE_SIMULINK.relative_to(RACINE)}")
 
 
 if __name__ == "__main__":
