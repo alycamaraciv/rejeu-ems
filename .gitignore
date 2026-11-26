@@ -1,3 +1,6 @@
-*.slxc
-*.asv
-*.autosave
+# Données volumineuses téléchargées : voir README pour les retrouver
+data/brut/
+# Python
+__pycache__/
+*.pyc
+.venv/
